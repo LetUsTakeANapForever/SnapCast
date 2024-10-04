@@ -1,0 +1,16 @@
+from PIL import Image
+import os
+import numpy as np
+import xlsxwriter
+
+from PIL import Image
+
+# Load the image
+image = Image.open('strato2.jpg')
+
+# Apply color quantization with a specified number of colors (e.g., 8)
+quantized_image = image.quantize(colors=4, method=Image.MEDIANCUT)
+
+# Save or display the result
+quantized_image.save('quantized_image4.png')
+quantized_image.show()
