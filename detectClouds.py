@@ -44,3 +44,16 @@ def textureOverlay(img, texture, threshold):
                 # change what to do here
     return imgOut
 
+
+def quantize_img_color(img):
+    pass
+
+
+def detect_edge(img):
+    return cv2.Canny(img, threshold1=)
+
+def get_circularity():
+    pass
+
+
+cummulus = cv2.imread('cloud_dataset/cumulus/cumulus1.png',0)
