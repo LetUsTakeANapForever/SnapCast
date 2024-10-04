@@ -1,5 +1,5 @@
 # SnapCast
-Snap the sky to forecast the rain.
+Snap the sky, predict the rain, and uncover the cloud's identity.
 
 ## How to use
 
