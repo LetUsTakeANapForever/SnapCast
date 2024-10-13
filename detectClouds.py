@@ -138,9 +138,9 @@ def write_excel():
 fixed_width = 256
 fixed_height = 256
 
-cumulus = cv2.imread('cloud_dataset/cumulus.jpg', 0)
-nimbostratus = cv2.imread('cloud_dataset/nimbo_t.png', 0)
-stratocumulus = cv2.imread('cloud_dataset/stratocumulus.jpg', 0)
+cumulus = cv2.imread('cloud_dataset/cumulus2.png', 0)
+nimbostratus = cv2.imread('cloud_dataset/nimbostratus2.png', 0)
+stratocumulus = cv2.imread('cloud_dataset/statocumulus2.png', 0)
 
 resized_cumulus = resize_to_fixed_size(cumulus, fixed_width, fixed_height)
 resized_nimbostratus = resize_to_fixed_size(nimbostratus, fixed_width, fixed_height)
@@ -154,13 +154,13 @@ run1 = run(resized_cumulus, cumulus_t)
 run2 = run(resized_nimbostratus, nimbostratus_t)
 run3 = run(resized_stratocumulus, stratocumulus_t)
 
-cv2.imshow('overlay', run1[0])
-cv2.waitKey(0)
-cv2.imshow('overlay', run2[0])
-cv2.waitKey(0)
-cv2.imshow('overlay', run3[0])
-cv2.waitKey(0)
+# cv2.imshow('overlay', run1[0])
+# cv2.waitKey(0)
+# cv2.imshow('overlay', run2[0])
+# cv2.waitKey(0)
+# cv2.imshow('overlay', run3[0])
+# cv2.waitKey(0)
 
 detect_cloud_types(cumulus)
-detect_cloud_types(nimbostratus)
+# detect_cloud_types(nimbostratus)
 detect_cloud_types(stratocumulus)
