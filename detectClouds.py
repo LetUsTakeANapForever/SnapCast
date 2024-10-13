@@ -79,44 +79,51 @@ def resize_img(img):
 def run(img, texture):
     q_img = quantize_img_color(img)
     q_img_t = quantize_img_color(texture)
-    # q_img = quantize(img)
-    # q_img_t = quantize(texture)
     img_overlay = textureOverlay(q_img, q_img_t, 0.2)
     resized_img = resize_img(img_overlay[0])
     area = img_overlay[1]
     cir = get_circularity(q_img)
-    # print('area:', area)
-    # print('circularity', cir)
     return [resized_img, area, cir]
 
 
-def quantize(img):
-    image = Image.open(img)
-    quantized_image = image.quantize(colors=4, method='mediancut')
-    quantized_image.save('quantized_image.png')
+def get_edgeDensity(img):
+    r, c = img.shape
+    smooth_img = cv2.GaussianBlur(img, ksize=(5,5), sigmaX=0, sigmaY=0)
+    edges = cv2.Canny(smooth_img, threshold1=100, threshold2=200)
+    total_pixels = r*c
+    edge_pixels = np.count_nonzero(edges)
+    edge_density = edge_pixels / total_pixels
+    return edge_density
 
 
-def get_his(img):
-        quantize(img)
-        qt_img = cv2.imread('quantized_image.png')
-        h, w = qt_img.shape[:2]
-        color_his = np.full(256, 0, dtype=int)
-        for i in range(h):
-            for j in range(w):
-                color_his[img[i][j][0]] += 1
-        return color_his
+def get_aspect_ratio(img):
+    # Get the shape of the image (height, width)
+    h, w = img.shape[:2]
+    # Calculate aspect ratio
+    aspect_ratio = w / h
+    return aspect_ratio
+
+
+def resize_to_fixed_size(img, width, height):
+    # Resize the image to the specified width and height
+    resized_img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
+    return resized_img
 
 
 def detect_cloud_types(img):
     area = cv2.countNonZero(img)
     cir = get_circularity(img)
-    print(area)
-    print(cir)
-    if area < 20000 and 100 < cir < 1000:
+    aspect_ratio = get_aspect_ratio(img)
+    edge_density = get_edgeDensity(img)
+    print("Area:", area)
+    print("Circularity:", cir)
+    print("Aspect Ratio:", aspect_ratio)
+    print("Edge", edge_density)
+    if area > 7000 and cir >= 3 and 1.6 < aspect_ratio < 3.5 and edge_density > 0.0003:
         print('Type:cumulus (0)')
-    elif area > 20000000 and 100 < cir < 500:
+    elif area > 40000 and cir == 0 and 1.1 < aspect_ratio < 2.0 and edge_density < 0.002:
         print('Type:nimbostratus (1)')
-    else:
+    elif 5000 < area < 20000 and 0 <= cir <= 1 and 0.8 < aspect_ratio < 1.84 and 0.0 <= edge_density < 0.02:
         print('Type:stratocumulus (0)')
 
 
@@ -128,17 +135,24 @@ def write_excel():
     pass
 
 
-cumulus = cv2.imread('cloud_dataset/cumulus.jpg', 0)
-nimbostratus = cv2.imread('cloud_dataset/nimbostratus.png', 0)
-stratocumulus = cv2.imread('cloud_dataset/stratocumulus.jpg', 0)
+fixed_width = 256
+fixed_height = 256
 
-cumulus_t = cv2.imread('cloud_dataset/cumulus_t.png', 0)
-nimbostratus_t = cv2.imread('cloud_dataset/nimbo_t.png', 0)
-stratocumulus_t = cv2.imread('cloud_dataset/strato_t.png', 0)
+cumulus = cv2.imread('minicumulus6.png', 0)
+nimbostratus = cv2.imread('mininimbro4.png', 0)
+stratocumulus = cv2.imread('miniStrato10.png', 0)
 
-run1 = run(cumulus, cumulus_t)
-run2 = run(nimbostratus, nimbostratus_t)
-run3 = run(stratocumulus, stratocumulus_t)
+resized_cumulus = resize_to_fixed_size(cumulus, fixed_width, fixed_height)
+resized_nimbostratus = resize_to_fixed_size(nimbostratus, fixed_width, fixed_height)
+resized_stratocumulus = resize_to_fixed_size(stratocumulus, fixed_width, fixed_height)
+
+cumulus_t = cv2.imread('cumulus_t.png', 0)
+nimbostratus_t = cv2.imread('nimbo_t.png', 0)
+stratocumulus_t = cv2.imread('strato_t.png', 0)
+
+run1 = run(resized_cumulus, cumulus_t)
+run2 = run(resized_nimbostratus, nimbostratus_t)
+run3 = run(resized_stratocumulus, stratocumulus_t)
 
 # cv2.imshow('overlay', run1)
 # cv2.waitKey(0)
@@ -147,5 +161,6 @@ run3 = run(stratocumulus, stratocumulus_t)
 # cv2.imshow('overlay', run3)
 # cv2.waitKey(0)
 
+detect_cloud_types(cumulus)
+detect_cloud_types(nimbostratus)
 detect_cloud_types(stratocumulus)
-
