@@ -42,10 +42,10 @@ def textureOverlay(img, texture, threshold):
             subImg = img[i:i+windowSize, j:j+windowSize]
             hisSubImg = calTextureHis(subImg)
             if calL1Dist(hisTexture, hisSubImg) < threshold:
-                imgOut[i+windowSize//2][j+windowSize//2] = 0
+                imgOut[i+windowSize//2][j+windowSize//2] = 255
                 detected_area += 1
             else:
-                imgOut[i + windowSize // 2][j + windowSize // 2] = 255
+                imgOut[i + windowSize // 2][j + windowSize // 2] = 0
     return [imgOut, detected_area]
 
 
@@ -104,6 +104,10 @@ def get_aspect_ratio(img):
     return aspect_ratio
 
 
+def get_mean_intensity(img):
+    return np.mean(img)
+
+
 def resize_to_fixed_size(img, width, height):
     # Resize the image to the specified width and height
     resized_img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
@@ -111,19 +115,31 @@ def resize_to_fixed_size(img, width, height):
 
 
 def detect_cloud_types(img):
-    area = cv2.countNonZero(img)
-    cir = get_circularity(img)
-    aspect_ratio = get_aspect_ratio(img)
-    edge_density = get_edgeDensity(img)
+    if 'cumulus' in str(img)[0:7]:
+        texture = cumulus_t
+    elif 'nimbo' in str(img)[0:5]:
+        texture = nimbostratus_t
+    else:
+        texture = stratocumulus_t
+
+    picture_overlay = textureOverlay(img, texture, 0.2)[0]
+
+    area = cv2.countNonZero(picture_overlay)
+    cir = get_circularity(picture_overlay)
+    aspect_ratio = get_aspect_ratio(picture_overlay)
+    edge_density = get_edgeDensity(picture_overlay)
+    mean_intensity = get_mean_intensity(picture_overlay)
     print("Area:", area)
     print("Circularity:", cir)
     print("Aspect Ratio:", aspect_ratio)
-    print("Edge", edge_density)
-    if area > 7000 and cir >= 3 and 1.6 < aspect_ratio < 3.5 and edge_density > 0.0003:
+    print("Edge Density:", edge_density)
+    print("Mean Intensity:", mean_intensity)
+    if area > 7000 and cir >= 3 and 1.6 < aspect_ratio < 3.5 and edge_density > 0.0003 and mean_intensity > 124:
         print('Type:cumulus (0)')
-    elif area > 40000 and cir == 0 and 1.1 < aspect_ratio < 2.0 and edge_density < 0.002:
+    elif area > 40000 and cir == 0 and 1.1 < aspect_ratio < 2.0 and edge_density < 0.002 and mean_intensity > 125:
         print('Type:nimbostratus (1)')
-    elif 5000 < area < 20000 and 0 <= cir <= 1 and 0.8 < aspect_ratio < 1.84 and 0.0 <= edge_density < 0.02:
+    elif (5000 < area < 20000 and 0 <= cir <= 1 and 0.8 < aspect_ratio < 1.84 and 0.0 <= edge_density < 0.02
+          and mean_intensity > 200):
         print('Type:stratocumulus (0)')
 
 
@@ -138,9 +154,9 @@ def write_excel():
 fixed_width = 256
 fixed_height = 256
 
-cumulus = cv2.imread('cloud_dataset/cumulus2.png', 0)
-nimbostratus = cv2.imread('cloud_dataset/nimbostratus2.png', 0)
-stratocumulus = cv2.imread('cloud_dataset/statocumulus2.png', 0)
+cumulus = cv2.imread('cloud_dataset/cumulus/minicumulus.png', 0)
+nimbostratus = cv2.imread('cloud_dataset/nimbo/mininimbo1.png', 0)
+stratocumulus = cv2.imread('cloud_dataset/strato/miniStrato1.png', 0)
 
 resized_cumulus = resize_to_fixed_size(cumulus, fixed_width, fixed_height)
 resized_nimbostratus = resize_to_fixed_size(nimbostratus, fixed_width, fixed_height)
@@ -154,13 +170,22 @@ run1 = run(resized_cumulus, cumulus_t)
 run2 = run(resized_nimbostratus, nimbostratus_t)
 run3 = run(resized_stratocumulus, stratocumulus_t)
 
-# cv2.imshow('overlay', run1[0])
-# cv2.waitKey(0)
-# cv2.imshow('overlay', run2[0])
-# cv2.waitKey(0)
-# cv2.imshow('overlay', run3[0])
-# cv2.waitKey(0)
+cv2.imshow('original', resized_cumulus)
+cv2.waitKey(0)
+cv2.imshow('original', resized_nimbostratus)
+cv2.waitKey(0)
+cv2.imshow('original', resized_stratocumulus)
+cv2.waitKey(0)
+
+cv2.imshow('overlay', run1[0])
+cv2.waitKey(0)
+cv2.imshow('overlay', run2[0])
+cv2.waitKey(0)
+cv2.imshow('overlay', run3[0])
+cv2.waitKey(0)
 
 detect_cloud_types(cumulus)
-# detect_cloud_types(nimbostratus)
+print('\n')
+detect_cloud_types(nimbostratus)
+print('\n')
 detect_cloud_types(stratocumulus)
