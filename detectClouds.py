@@ -128,20 +128,37 @@ def detect_cloud_types(img):
     aspect_ratio = get_aspect_ratio(picture_overlay)
     edge_density = get_edgeDensity(picture_overlay)
     mean_intensity = get_mean_intensity(picture_overlay)
-    # print("Area:", area)
-    # print("Circularity:", cir)
-    # print("Aspect Ratio:", aspect_ratio)
-    # print("Edge Density:", edge_density)
-    # print("Mean Intensity:", mean_intensity)
+    print("Area:", area)
+    print("Circularity:", cir)
+    print("Aspect Ratio:", aspect_ratio)
+    print("Edge Density:", edge_density)
+    print("Mean Intensity:", mean_intensity)
     if area > 3300 and 19 <= cir < 120 and 0.8 < aspect_ratio < 3.6 and edge_density > 0.038 and mean_intensity > 100:
         print('Type:cumulus (0)')
-    elif (area >= 2800 and 12 <= cir < 52 and 1.1 < aspect_ratio < 2.2 and 0.0 <= edge_density < 0.05
+    elif (area >= 2800 or 12 <= cir < 52 and 1.1 < aspect_ratio < 2.2 and 0.0 <= edge_density < 0.05
           and mean_intensity < 100):
         print('Type:nimbostratus (1)')
     elif (5000 < area < 55000 or cir >= 99 and 0.8 < aspect_ratio < 1.17 and 0.02 < edge_density < 0.08
           and mean_intensity > 30):
         print('Type:stratocumulus (0)')
-    return [area, cir, aspect_ratio, edge_density, mean_intensity]
+
+
+def img_properties(img):
+    if 'cumulus' in str(img)[0:7]:
+        texture = cumulus_t
+    elif 'nimbo' in str(img)[0:5]:
+        texture = nimbostratus_t
+    else:
+        texture = stratocumulus_t
+
+    picture_overlay = textureOverlay(img, texture, 0.2)[0]
+
+    area = cv2.countNonZero(picture_overlay)
+    cir = get_circularity(picture_overlay)
+    aspect_ratio = get_aspect_ratio(picture_overlay)
+    edge_density = get_edgeDensity(picture_overlay)
+    mean_intensity = get_mean_intensity(picture_overlay)
+    return [area, cir, aspect_ratio, edge_density, mean_intensity, calFEdgeness(img, 135)]
 
 
 def load_sub_folders(folder):
@@ -222,10 +239,12 @@ def generate_excel():
 fixed_width = 256
 fixed_height = 256
 
+img_test = cv2.imread('cloud_dataset/nimbo/mininimbo5.png', 0)
 # cumulus = cv2.imread('cloud_dataset/cumulus/minicumulus100.png', 0)
 # nimbostratus = cv2.imread('cloud_dataset/nimbo/nimbost47.png', 0)
 # stratocumulus = cv2.imread('cloud_dataset/strato/miniStrato40.png', 0)
-#
+
+resized_img_test = resize_to_fixed_size(img_test, fixed_width, fixed_height)
 # resized_cumulus = resize_to_fixed_size(cumulus, fixed_width, fixed_height)
 # resized_nimbostratus = resize_to_fixed_size(nimbostratus, fixed_width, fixed_height)
 # resized_stratocumulus = resize_to_fixed_size(stratocumulus, fixed_width, fixed_height)
@@ -258,4 +277,6 @@ stratocumulus_t = cv2.imread('strato_t.png', 0)
 # print('\n')
 # detect_cloud_types(stratocumulus)
 
-generate_excel()
+detect_cloud_types(resized_img_test)
+
+# generate_excel()
