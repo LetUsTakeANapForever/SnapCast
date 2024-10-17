@@ -1,8 +1,7 @@
 import cv2
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
+import os
+import pandas as pd
 
 
 def calMeanGray(img):
@@ -129,63 +128,134 @@ def detect_cloud_types(img):
     aspect_ratio = get_aspect_ratio(picture_overlay)
     edge_density = get_edgeDensity(picture_overlay)
     mean_intensity = get_mean_intensity(picture_overlay)
-    print("Area:", area)
-    print("Circularity:", cir)
-    print("Aspect Ratio:", aspect_ratio)
-    print("Edge Density:", edge_density)
-    print("Mean Intensity:", mean_intensity)
-    if area > 7000 and cir >= 3 and 1.6 < aspect_ratio < 3.5 and edge_density > 0.0003 and mean_intensity > 124:
+    # print("Area:", area)
+    # print("Circularity:", cir)
+    # print("Aspect Ratio:", aspect_ratio)
+    # print("Edge Density:", edge_density)
+    # print("Mean Intensity:", mean_intensity)
+    if area > 3300 and 19 <= cir < 120 and 0.8 < aspect_ratio < 3.6 and edge_density > 0.038 and mean_intensity > 100:
         print('Type:cumulus (0)')
-    elif area > 40000 and cir == 0 and 1.1 < aspect_ratio < 2.0 and edge_density < 0.002 and mean_intensity > 125:
+    elif (area >= 2800 and 12 <= cir < 52 and 1.1 < aspect_ratio < 2.2 and 0.0 <= edge_density < 0.05
+          and mean_intensity < 100):
         print('Type:nimbostratus (1)')
-    elif (5000 < area < 20000 and 0 <= cir <= 1 and 0.8 < aspect_ratio < 1.84 and 0.0 <= edge_density < 0.02
-          and mean_intensity > 200):
+    elif (5000 < area < 55000 or cir >= 99 and 0.8 < aspect_ratio < 1.17 and 0.02 < edge_density < 0.08
+          and mean_intensity > 30):
         print('Type:stratocumulus (0)')
+    return [area, cir, aspect_ratio, edge_density, mean_intensity]
 
 
-def load_file():
-    pass
+def load_sub_folders(folder):
+    folder_names = []
+    for folder_name in os.listdir(folder):
+        if folder_name is not None:
+            folder_names.append(folder_name)
+    return folder_names
 
 
-def write_excel():
-    pass
+def load_img_in_subfolder(folder):
+    file_names = []
+    for file in os.listdir(folder):
+        img_path = os.path.join(folder, file)
+        img = cv2.imread(img_path)
+        if img is not None:
+            file_names.append(file)
+    return file_names
+
+
+def get_all_images():
+    images = []
+    for subfolder_name in load_sub_folders('cloud_dataset'):
+        for filename in load_img_in_subfolder('cloud_dataset/' + subfolder_name):
+            img_path = 'cloud_dataset/' + subfolder_name + '/' + filename
+            img = cv2.imread(img_path, 0)
+            images.append(img)
+    return images
+
+
+def generate_excel():
+    subfolder_names_list = []
+    filename_list = []
+    area_list = []
+    cir_list = []
+    aspect_ratio_list = []
+    edge_density_list = []
+    mean_intensity_list = []
+    fEdgeness_list = []
+
+    for subfolder_name in load_sub_folders('cloud_dataset'):
+        for filename in load_img_in_subfolder('cloud_dataset/'+subfolder_name):
+            subfolder_names_list.append(subfolder_name)
+            filename_list.append(filename)
+
+    for img in get_all_images():
+        if 'cumulus' in str(img)[0:7]:
+            texture = cumulus_t
+        elif 'nimbo' in str(img)[0:5]:
+            texture = nimbostratus_t
+        else:
+            texture = stratocumulus_t
+
+        resized_cumulus = resize_to_fixed_size(img, fixed_width, fixed_height)
+        picture_overlay = textureOverlay(resized_cumulus, texture, 0.2)[0]
+        area_list.append(cv2.countNonZero(picture_overlay))
+        cir_list.append(get_circularity(picture_overlay))
+        aspect_ratio_list.append(get_aspect_ratio(picture_overlay))
+        edge_density_list.append(get_edgeDensity(picture_overlay))
+        mean_intensity_list.append(get_mean_intensity(picture_overlay))
+        fEdgeness_list.append(calFEdgeness(resized_cumulus, 138))
+
+    data = {
+        'Class': subfolder_names_list,
+        'Filename': filename_list,
+        'Area': area_list,
+        'Circularity': cir_list,
+        'Aspect Ratio': aspect_ratio_list,
+        'Edge Density': edge_density_list,
+        'Mean Intensity': mean_intensity_list,
+        'FEdgeness': fEdgeness_list
+    }
+
+    df = pd.DataFrame(data)
+    df.to_csv('cloud_features.csv', index=False)
 
 
 fixed_width = 256
 fixed_height = 256
 
-cumulus = cv2.imread('cloud_dataset/cumulus/minicumulus.png', 0)
-nimbostratus = cv2.imread('cloud_dataset/nimbo/mininimbo1.png', 0)
-stratocumulus = cv2.imread('cloud_dataset/strato/miniStrato1.png', 0)
+# cumulus = cv2.imread('cloud_dataset/cumulus/minicumulus100.png', 0)
+# nimbostratus = cv2.imread('cloud_dataset/nimbo/nimbost47.png', 0)
+# stratocumulus = cv2.imread('cloud_dataset/strato/miniStrato40.png', 0)
+#
+# resized_cumulus = resize_to_fixed_size(cumulus, fixed_width, fixed_height)
+# resized_nimbostratus = resize_to_fixed_size(nimbostratus, fixed_width, fixed_height)
+# resized_stratocumulus = resize_to_fixed_size(stratocumulus, fixed_width, fixed_height)
 
-resized_cumulus = resize_to_fixed_size(cumulus, fixed_width, fixed_height)
-resized_nimbostratus = resize_to_fixed_size(nimbostratus, fixed_width, fixed_height)
-resized_stratocumulus = resize_to_fixed_size(stratocumulus, fixed_width, fixed_height)
+cumulus_t = cv2.imread('cumulus_t.png', 0)
+nimbostratus_t = cv2.imread('nimbo_t.png', 0)
+stratocumulus_t = cv2.imread('strato_t.png', 0)
 
-cumulus_t = cv2.imread('cloud_dataset/cumulus_t.png', 0)
-nimbostratus_t = cv2.imread('cloud_dataset/nimbo_t.png', 0)
-stratocumulus_t = cv2.imread('cloud_dataset/strato_t.png', 0)
+# run1 = run(resized_cumulus, cumulus_t)
+# run2 = run(resized_nimbostratus, nimbostratus_t)
+# run3 = run(resized_stratocumulus, stratocumulus_t)
+#
+# cv2.imshow('original', resized_cumulus)
+# cv2.waitKey(0)
+# cv2.imshow('original', resized_nimbostratus)
+# cv2.waitKey(0)
+# cv2.imshow('original', resized_stratocumulus)
+# cv2.waitKey(0)
+#
+# cv2.imshow('overlay', run1[0])
+# cv2.waitKey(0)
+# cv2.imshow('overlay', run2[0])
+# cv2.waitKey(0)
+# cv2.imshow('overlay', run3[0])
+# cv2.waitKey(0)
+#
+# detect_cloud_types(cumulus)
+# print('\n')
+# detect_cloud_types(nimbostratus)
+# print('\n')
+# detect_cloud_types(stratocumulus)
 
-run1 = run(resized_cumulus, cumulus_t)
-run2 = run(resized_nimbostratus, nimbostratus_t)
-run3 = run(resized_stratocumulus, stratocumulus_t)
-
-cv2.imshow('original', resized_cumulus)
-cv2.waitKey(0)
-cv2.imshow('original', resized_nimbostratus)
-cv2.waitKey(0)
-cv2.imshow('original', resized_stratocumulus)
-cv2.waitKey(0)
-
-cv2.imshow('overlay', run1[0])
-cv2.waitKey(0)
-cv2.imshow('overlay', run2[0])
-cv2.waitKey(0)
-cv2.imshow('overlay', run3[0])
-cv2.waitKey(0)
-
-detect_cloud_types(cumulus)
-print('\n')
-detect_cloud_types(nimbostratus)
-print('\n')
-detect_cloud_types(stratocumulus)
+generate_excel()
