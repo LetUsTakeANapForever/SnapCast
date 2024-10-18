@@ -114,9 +114,9 @@ def resize_to_fixed_size(img, width, height):
 
 
 def detect_cloud_types(img):
-    if 'cumulus' in str(img)[0:7]:
+    if 'cumulus' in str(img):
         texture = cumulus_t
-    elif 'nimbo' in str(img)[0:5]:
+    elif 'nimbo' in str(img):
         texture = nimbostratus_t
     else:
         texture = stratocumulus_t
@@ -144,9 +144,9 @@ def detect_cloud_types(img):
 
 
 def img_properties(img):
-    if 'cumulus' in str(img)[0:7]:
+    if 'cumulus' in str(img):
         texture = cumulus_t
-    elif 'nimbo' in str(img)[0:5]:
+    elif 'nimbo' in str(img):
         texture = nimbostratus_t
     else:
         texture = stratocumulus_t
