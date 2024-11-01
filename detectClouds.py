@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-import os
-import pandas as pd
 
 
 def calMeanGray(img):
@@ -45,7 +43,7 @@ def textureOverlay(img, texture, threshold):
                 detected_area += 1
             else:
                 imgOut[i + windowSize // 2][j + windowSize // 2] = 0
-    return [imgOut, detected_area]
+    return imgOut
 
 
 # def quantize_img_color(img):
@@ -114,7 +112,7 @@ def detect_cloud_types(img):
     else:
         texture = stratocumulus_t
 
-    picture_overlay = textureOverlay(img, texture, 0.2)[0]
+    picture_overlay = textureOverlay(img, texture, 0.2)
 
     area = cv2.countNonZero(picture_overlay)
     cir = get_circularity(picture_overlay)
@@ -137,9 +135,9 @@ def detect_cloud_types(img):
         print('Type:stratocumulus (0)')
 
 
-cumulus = cv2.imread('bigcumu21.jpg', 0)
-nimbostratus = cv2.imread('bignimbo7.jpg', 0)
-stratocumulus = cv2.imread('bigstrato16.jpg', 0)
+cumulus = cv2.imread('cloud_dataset/cumulusAnswer/bigcumu21.jpg', 0)
+nimbostratus = cv2.imread('cloud_dataset/NimboAnswer/bignimbo7.12.jpg', 0)
+stratocumulus = cv2.imread('cloud_dataset/StratoAnswer/bigstrato15.jpg', 0)
 
 
 resized_cumulus = resize_img(cumulus)
@@ -150,26 +148,26 @@ cumulus_t = cv2.imread('cumulus_t.png', 0)
 nimbostratus_t = cv2.imread('nimbo_t.png', 0)
 stratocumulus_t = cv2.imread('strato_t.png', 0)
 
-# run1 = run(resized_cumulus, cumulus_t)
-# run2 = run(resized_nimbostratus, nimbostratus_t)
-# run3 = run(resized_stratocumulus, stratocumulus_t)
-#
-# cv2.imshow('original', resized_cumulus)
-# cv2.waitKey(0)
-# cv2.imshow('original', resized_nimbostratus)
-# cv2.waitKey(0)
-# cv2.imshow('original', resized_stratocumulus)
-# cv2.waitKey(0)
-#
-# cv2.imshow('overlay', run1[0])
-# cv2.waitKey(0)
-# cv2.imshow('overlay', run2[0])
-# cv2.waitKey(0)
-# cv2.imshow('overlay', run3[0])
-# cv2.waitKey(0)
-#
+overlay_pic1 = textureOverlay(resized_cumulus, cumulus_t, 0.2)
+overlay_pic2 = textureOverlay(resized_nimbostratus, nimbostratus_t, 0.2)
+overlay_pic3 = textureOverlay(resized_stratocumulus, stratocumulus_t, 0.2)
+
+cv2.imshow('original', resized_cumulus)
+cv2.waitKey(0)
+cv2.imshow('original', resized_nimbostratus)
+cv2.waitKey(0)
+cv2.imshow('original', resized_stratocumulus)
+cv2.waitKey(0)
+
+cv2.imshow('overlay', overlay_pic1)
+cv2.waitKey(0)
+cv2.imshow('overlay', overlay_pic2)
+cv2.waitKey(0)
+cv2.imshow('overlay', overlay_pic3)
+cv2.waitKey(0)
+
 detect_cloud_types(cumulus)
-# print('\n')
-# detect_cloud_types(nimbostratus)
-# print('\n')
-# detect_cloud_types(stratocumulus)
+print('\n')
+detect_cloud_types(nimbostratus)
+print('\n')
+detect_cloud_types(stratocumulus)
