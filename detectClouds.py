@@ -105,9 +105,14 @@ def get_mean_intensity(img):
 
 
 def detect_cloud_types(img):
-    if 'cumulus' in str(img):
+    cumulus_t_mean = calMeanGray(cumulus_t)
+    nimbostratus_t_mean = calMeanGray(nimbostratus_t)
+
+    img_mean = calMeanGray(img)
+
+    if abs(img_mean - cumulus_t_mean) < 0.2:
         texture = cumulus_t
-    elif 'nimbo' in str(img):
+    elif abs(img_mean - nimbostratus_t_mean) < 0.2:
         texture = nimbostratus_t
     else:
         texture = stratocumulus_t
@@ -137,7 +142,7 @@ def detect_cloud_types(img):
 
 cumulus = cv2.imread('cloud_dataset/cumulusAnswer/bigcumu21.jpg', 0)
 nimbostratus = cv2.imread('cloud_dataset/NimboAnswer/bignimbo7.12.jpg', 0)
-stratocumulus = cv2.imread('cloud_dataset/StratoAnswer/bigstrato15.jpg', 0)
+stratocumulus = cv2.imread('cloud_dataset/StratoAnswer/bigstrato3.jpg', 0)
 
 
 resized_cumulus = resize_img(cumulus)
