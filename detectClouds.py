@@ -135,7 +135,7 @@ def detect_cloud_types(img):
     elif (area > 50000 and cir < 250 and aspect_ratio < 1.51 and edge_density < 0.02
           and mean_intensity < 230):
         print('Type:nimbostratus (1)')
-    elif (area > 80000 and cir > 1000 and aspect_ratio > 1.3 and 0.03 < edge_density < 0.08
+    elif (area > 70000 and cir > 1000 and aspect_ratio > 1.3 and 0.03 < edge_density < 0.08
           and mean_intensity > 69):
         print('Type:stratocumulus (0)')
 
